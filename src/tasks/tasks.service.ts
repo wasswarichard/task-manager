@@ -70,36 +70,6 @@ export class TasksService {
     return tasks;
   }
 
-  // Presentation helpers moved from controller
-  present(t: any) {
-    return {
-      id: t.id,
-      title: t.title,
-      description: t.description,
-      status: t.status,
-      dueDate: t.dueDate,
-      createdBy: t.createdBy
-        ? {
-            id: t.createdBy.id,
-            email: t.createdBy.email,
-            name: t.createdBy.name,
-          }
-        : undefined,
-      assignees: (t.assignees || []).map((a: any) => ({
-        id: a.id,
-        email: a.email,
-        name: a.name,
-      })),
-      createdAt: t.createdAt,
-      updatedAt: t.updatedAt,
-    };
-  }
-
-  async findAllPresented(filters: ListFilters = {}) {
-    const tasks = await this.findAll(filters);
-    return tasks.map((t) => this.present(t));
-  }
-
   async findOne(id: string): Promise<Task> {
     const task = await this.taskModel.findByPk(id, {
       include: [
@@ -119,27 +89,13 @@ export class TasksService {
     return task;
   }
 
-  async findOnePresented(id: string) {
-    const t = await this.findOne(id);
-    return this.present(t);
-  }
-
   async update(id: string, dto: UpdateTaskDto): Promise<Task> {
-    const task = await this.findOne(id);
-    if (dto.title !== undefined) task.title = dto.title;
-    if (dto.description !== undefined)
-      task.description = dto.description ?? null;
-    if (dto.status !== undefined) task.status = dto.status;
-    if (dto.dueDate !== undefined)
-      task.dueDate = dto.dueDate ? new Date(dto.dueDate) : null;
-    await task.save();
-    this.logger.log(`Updated task ${id}`);
-    return this.findOne(id);
-  }
+    const [_, [updated]] = await Task.update(dto, {
+      where: { id },
+      returning: true,
+    });
 
-  async updateAndReturnPresented(id: string, dto: UpdateTaskDto) {
-    const t = await this.update(id, dto);
-    return this.present(t);
+    return updated;
   }
 
   async remove(id: string): Promise<void> {
@@ -148,12 +104,7 @@ export class TasksService {
     this.logger.log(`Deleted task ${id}`);
   }
 
-  async removeAndReturnSuccess(id: string) {
-    await this.remove(id);
-    return { success: true } as const;
-  }
-
-  async assign(taskId: string, userId: string): Promise<void> {
+  async assign(taskId: string, userId: string): Promise<TaskAssignee> {
     const [task, user] = await Promise.all([
       this.taskModel.findByPk(taskId),
       this.userModel.findByPk(userId),
@@ -174,15 +125,11 @@ export class TasksService {
       this.logger.debug(
         `Assign noop: user ${userId} already assigned to task ${taskId}`,
       );
-      return; // idempotent
+      return existing;
     }
-    await this.taskAssignee.create({ taskId, userId } as any);
+    const created = await this.taskAssignee.create({ taskId, userId } as any);
     this.logger.log(`Assigned user ${userId} to task ${taskId}`);
-  }
-
-  async assignAndReturnSuccess(taskId: string, userId: string) {
-    await this.assign(taskId, userId);
-    return { success: true } as const;
+    return created;
   }
 
   async unassign(taskId: string, userId: string): Promise<void> {
@@ -197,16 +144,5 @@ export class TasksService {
     }
     await existing.destroy();
     this.logger.log(`Unassigned user ${userId} from task ${taskId}`);
-  }
-
-  async unassignAndReturnSuccess(taskId: string, userId: string) {
-    await this.unassign(taskId, userId);
-    return { success: true } as const;
-  }
-
-  async createAndReturnPresented(dto: CreateTaskDto, createdById: string) {
-    const created = await this.create(dto, createdById);
-    const t = await this.findOne(created.id);
-    return this.present(t);
   }
 }

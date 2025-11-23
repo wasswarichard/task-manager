@@ -27,13 +27,13 @@ describe('TasksController (unit)', () => {
         {
           provide: TasksService,
           useValue: {
-            findAllPresented: jest.fn(),
-            findOnePresented: jest.fn(),
-            createAndReturnPresented: jest.fn(),
-            updateAndReturnPresented: jest.fn(),
-            removeAndReturnSuccess: jest.fn(),
-            assignAndReturnSuccess: jest.fn(),
-            unassignAndReturnSuccess: jest.fn(),
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+            assign: jest.fn(),
+            unassign: jest.fn(),
           },
         },
       ],
@@ -43,8 +43,8 @@ describe('TasksController (unit)', () => {
     service = moduleRef.get(TasksService);
   });
 
-  it('findAll forwards filters to service and returns presented', async () => {
-    (service.findAllPresented as jest.Mock).mockResolvedValue([
+  it('findAll forwards filters to service and returns tasks', async () => {
+    (service.findAll as jest.Mock).mockResolvedValue([
       makeTask(),
       makeTask({ id: 't2', title: 'Another' }),
     ]);
@@ -55,7 +55,7 @@ describe('TasksController (unit)', () => {
       'assignee-1',
     );
 
-    expect(service.findAllPresented).toHaveBeenCalledWith({
+    expect(service.findAll).toHaveBeenCalledWith({
       status: TaskStatus.OPEN,
       createdById: 'creator-1',
       assigneeId: 'assignee-1',
@@ -73,12 +73,10 @@ describe('TasksController (unit)', () => {
     });
   });
 
-  it('findOne delegates to service presented method', async () => {
-    (service.findOnePresented as jest.Mock).mockResolvedValue(
-      makeTask({ id: 'tx' }),
-    );
+  it('findOne delegates to service findOne', async () => {
+    (service.findOne as jest.Mock).mockResolvedValue(makeTask({ id: 'tx' }));
     const res = await controller.findOne('tx');
-    expect(service.findOnePresented).toHaveBeenCalledWith('tx');
+    expect(service.findOne).toHaveBeenCalledWith('tx');
     expect(res.id).toBe('tx');
     expect(res.createdBy).toEqual({
       id: 'u1',
@@ -90,60 +88,54 @@ describe('TasksController (unit)', () => {
     ]);
   });
 
-  it('create uses req.user.userId and returns presented created task', async () => {
-    (service.createAndReturnPresented as jest.Mock).mockResolvedValue(
-      makeTask({ id: 'newId' }),
-    );
+  it('create uses req.user.userId and returns created task fetched with relations', async () => {
+    (service.create as jest.Mock).mockResolvedValue(makeTask({ id: 'newId' }));
+    (service.findOne as jest.Mock).mockResolvedValue(makeTask({ id: 'newId' }));
 
     const res = await controller.create(
       { title: 'New Task' } as any,
       { user: { userId: 'creator-123' } } as any,
     );
 
-    expect(service.createAndReturnPresented).toHaveBeenCalledWith(
+    expect(service.create).toHaveBeenCalledWith(
       { title: 'New Task' },
       'creator-123',
     );
+    expect(service.findOne).toHaveBeenCalledWith('newId');
     expect(res.id).toBe('newId');
   });
 
-  it('update returns presented task', async () => {
-    (service.updateAndReturnPresented as jest.Mock).mockResolvedValue(
+  it('update returns updated task', async () => {
+    (service.update as jest.Mock).mockResolvedValue(
       makeTask({ id: 'to-update', title: 'Updated' }),
     );
     const res = await controller.update('to-update', {
       title: 'Updated',
     } as any);
-    expect(service.updateAndReturnPresented).toHaveBeenCalledWith('to-update', {
+    expect(service.update).toHaveBeenCalledWith('to-update', {
       title: 'Updated',
     });
     expect(res.title).toBe('Updated');
   });
 
-  it('remove returns success true', async () => {
-    (service.removeAndReturnSuccess as jest.Mock).mockResolvedValue({
-      success: true,
-    });
+  it('remove delegates to service.remove and returns void', async () => {
+    (service.remove as jest.Mock).mockResolvedValue(undefined);
     const res = await controller.remove('to-delete');
-    expect(service.removeAndReturnSuccess).toHaveBeenCalledWith('to-delete');
-    expect(res).toEqual({ success: true });
+    expect(service.remove).toHaveBeenCalledWith('to-delete');
+    expect(res).toBeUndefined();
   });
 
-  it('assign calls service and returns success', async () => {
-    (service.assignAndReturnSuccess as jest.Mock).mockResolvedValue({
-      success: true,
-    });
+  it('assign calls service.assign and returns void', async () => {
+    (service.assign as jest.Mock).mockResolvedValue(undefined);
     const res = await controller.assign('t1', { userId: 'u9' } as any);
-    expect(service.assignAndReturnSuccess).toHaveBeenCalledWith('t1', 'u9');
-    expect(res).toEqual({ success: true });
+    expect(service.assign).toHaveBeenCalledWith('t1', 'u9');
+    expect(res).toBeUndefined();
   });
 
-  it('unassign calls service and returns success', async () => {
-    (service.unassignAndReturnSuccess as jest.Mock).mockResolvedValue({
-      success: true,
-    });
+  it('unassign calls service.unassign', async () => {
+    (service.unassign as jest.Mock).mockResolvedValue(undefined);
     const res = await controller.unassign('t1', { userId: 'u9' } as any);
-    expect(service.unassignAndReturnSuccess).toHaveBeenCalledWith('t1', 'u9');
-    expect(res).toEqual({ success: true });
+    expect(service.unassign).toHaveBeenCalledWith('t1', 'u9');
+    expect(res).toBeUndefined();
   });
 });

@@ -8,6 +8,7 @@ import {
   BelongsTo,
   ForeignKey,
   BelongsToMany,
+  DeletedAt,
 } from 'sequelize-typescript';
 import { User } from '../users/user.model';
 import { TaskAssignee } from './taskAssignee.model';
@@ -18,7 +19,7 @@ export enum TaskStatus {
   DONE = 'DONE',
 }
 
-@Table({ tableName: 'tasks', timestamps: true })
+@Table({ tableName: 'tasks', timestamps: true, paranoid: true })
 export class Task extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
@@ -50,4 +51,8 @@ export class Task extends Model {
 
   @BelongsToMany(() => User, () => TaskAssignee)
   assignees?: User[];
+
+  @DeletedAt
+  @Column({ field: 'deleted_at', type: DataType.DATE })
+  deletedAt?: Date | null;
 }

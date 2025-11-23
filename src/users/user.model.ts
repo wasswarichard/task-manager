@@ -7,10 +7,11 @@ import {
   Default,
   Unique,
   HasMany,
+  DeletedAt,
 } from 'sequelize-typescript';
 import { Task } from '../tasks/task.model';
 
-@Table({ tableName: 'users', timestamps: true })
+@Table({ tableName: 'users', timestamps: true, paranoid: true })
 export class User extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
@@ -29,4 +30,8 @@ export class User extends Model {
 
   @HasMany(() => Task, 'createdById')
   createdTasks?: Task[];
+
+  @DeletedAt
+  @Column({ field: 'deleted_at', type: DataType.DATE })
+  deletedAt?: Date | null;
 }

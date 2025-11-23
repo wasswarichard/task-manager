@@ -50,4 +50,11 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ where: { email } });
   }
+
+  // Soft delete a user (paranoid)
+  async remove(id: string): Promise<void> {
+    const user = await this.findById(id);
+    await user.destroy();
+    this.logger.log(`Soft-deleted user ${id}`);
+  }
 }

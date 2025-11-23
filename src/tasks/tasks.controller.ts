@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -39,10 +40,12 @@ export class TasksController {
   @ApiQuery({ name: 'assigneeId', required: false })
   async findAll(
     @Query('status') status?: TaskStatus,
-    @Query('createdById') createdById?: string,
-    @Query('assigneeId') assigneeId?: string,
+    @Query('createdById', new ParseUUIDPipe({ version: '4' }))
+    createdById?: string,
+    @Query('assigneeId', new ParseUUIDPipe({ version: '4' }))
+    assigneeId?: string,
   ) {
-    return this.tasksService.findAllPresented({
+    return this.tasksService.findAll({
       status,
       createdById,
       assigneeId,
@@ -52,42 +55,51 @@ export class TasksController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a task by id' })
   @ApiOkResponse({ description: 'Returns a single task with relations' })
-  async findOne(@Param('id') id: string) {
-    return this.tasksService.findOnePresented(id);
+  async findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    return this.tasksService.findOne(id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new task' })
   @ApiOkResponse({ description: 'Returns the created task' })
   async create(@Body() dto: CreateTaskDto, @Req() req: any) {
-    return this.tasksService.createAndReturnPresented(dto, req.user.userId);
+    return this.tasksService.create(dto, req.user.userId);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a task' })
   @ApiOkResponse({ description: 'Returns the updated task' })
-  async update(@Param('id') id: string, @Body() dto: UpdateTaskDto) {
-    return this.tasksService.updateAndReturnPresented(id, dto);
+  async update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
+    return this.tasksService.update(id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a task' })
   @ApiOkResponse({ description: 'Returns { success: true } on success' })
-  async remove(@Param('id') id: string) {
-    return this.tasksService.removeAndReturnSuccess(id);
+  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    return this.tasksService.remove(id);
   }
 
   @Post(':id/assign')
   @ApiOperation({ summary: 'Assign a user to a task (idempotent)' })
   @ApiOkResponse({ description: 'Returns { success: true }' })
-  async assign(@Param('id') id: string, @Body() dto: AssignUserDto) {
-    return this.tasksService.assignAndReturnSuccess(id, dto.userId);
+  async assign(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: AssignUserDto,
+  ) {
+    return this.tasksService.assign(id, dto.userId);
   }
 
   @Post(':id/unassign')
   @ApiOperation({ summary: 'Unassign a user from a task' })
   @ApiOkResponse({ description: 'Returns { success: true }' })
-  async unassign(@Param('id') id: string, @Body() dto: AssignUserDto) {
-    return this.tasksService.unassignAndReturnSuccess(id, dto.userId);
+  async unassign(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: AssignUserDto,
+  ) {
+    return this.tasksService.unassign(id, dto.userId);
   }
 }
