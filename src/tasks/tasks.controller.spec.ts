@@ -80,7 +80,11 @@ describe('TasksController (unit)', () => {
     const res = await controller.findOne('tx');
     expect(service.findOnePresented).toHaveBeenCalledWith('tx');
     expect(res.id).toBe('tx');
-    expect(res.createdBy).toEqual({ id: 'u1', email: 'a@e.com', name: 'Alice' });
+    expect(res.createdBy).toEqual({
+      id: 'u1',
+      email: 'a@e.com',
+      name: 'Alice',
+    });
     expect(res.assignees).toEqual([
       { id: 'u2', email: 'b@e.com', name: 'Bob' },
     ]);
@@ -107,27 +111,37 @@ describe('TasksController (unit)', () => {
     (service.updateAndReturnPresented as jest.Mock).mockResolvedValue(
       makeTask({ id: 'to-update', title: 'Updated' }),
     );
-    const res = await controller.update('to-update', { title: 'Updated' } as any);
-    expect(service.updateAndReturnPresented).toHaveBeenCalledWith('to-update', { title: 'Updated' });
+    const res = await controller.update('to-update', {
+      title: 'Updated',
+    } as any);
+    expect(service.updateAndReturnPresented).toHaveBeenCalledWith('to-update', {
+      title: 'Updated',
+    });
     expect(res.title).toBe('Updated');
   });
 
   it('remove returns success true', async () => {
-    (service.removeAndReturnSuccess as jest.Mock).mockResolvedValue({ success: true });
+    (service.removeAndReturnSuccess as jest.Mock).mockResolvedValue({
+      success: true,
+    });
     const res = await controller.remove('to-delete');
     expect(service.removeAndReturnSuccess).toHaveBeenCalledWith('to-delete');
     expect(res).toEqual({ success: true });
   });
 
   it('assign calls service and returns success', async () => {
-    (service.assignAndReturnSuccess as jest.Mock).mockResolvedValue({ success: true });
+    (service.assignAndReturnSuccess as jest.Mock).mockResolvedValue({
+      success: true,
+    });
     const res = await controller.assign('t1', { userId: 'u9' } as any);
     expect(service.assignAndReturnSuccess).toHaveBeenCalledWith('t1', 'u9');
     expect(res).toEqual({ success: true });
   });
 
   it('unassign calls service and returns success', async () => {
-    (service.unassignAndReturnSuccess as jest.Mock).mockResolvedValue({ success: true });
+    (service.unassignAndReturnSuccess as jest.Mock).mockResolvedValue({
+      success: true,
+    });
     const res = await controller.unassign('t1', { userId: 'u9' } as any);
     expect(service.unassignAndReturnSuccess).toHaveBeenCalledWith('t1', 'u9');
     expect(res).toEqual({ success: true });

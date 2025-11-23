@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './user.model';
@@ -10,19 +11,25 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
   constructor(@InjectModel(User) private readonly userModel: typeof User) {}
 
   async create(dto: CreateUserDto): Promise<User> {
-    const existing = await this.userModel.findOne({
+    const existingUser = await this.userModel.findOne({
       where: { email: dto.email },
     });
-    if (existing) throw new ConflictException('Email already exists');
+    if (existingUser) {
+      this.logger.warn(`Attempt to register with existing email: ${dto.email}`);
+      throw new ConflictException('Email already exists');
+    }
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    return this.userModel.create({
+    const createdUser = await this.userModel.create({
       email: dto.email,
       name: dto.name,
       passwordHash,
     } as any);
+    this.logger.log(`Created user ${createdUser.id} (${createdUser.email})`);
+    return createdUser;
   }
 
   async findAll(): Promise<User[]> {
@@ -31,22 +38,13 @@ export class UsersService {
     });
   }
 
-  // Returns public-safe projection for all users (no password fields)
-  async findAllPublic(): Promise<{ id: string; email: string; name: string }[]> {
-    const users = await this.findAll();
-    return users.map((u) => ({ id: u.id, email: u.email, name: u.name }));
-  }
-
   async findById(id: string): Promise<User> {
     const user = await this.userModel.findByPk(id);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      this.logger.warn(`User not found: ${id}`);
+      throw new NotFoundException('User not found');
+    }
     return user;
-  }
-
-  // Returns a single user projected to public-safe shape
-  async findPublicById(id: string): Promise<{ id: string; email: string; name: string }> {
-    const u = await this.findById(id);
-    return { id: u.id, email: u.email, name: u.name };
   }
 
   async findByEmail(email: string): Promise<User | null> {

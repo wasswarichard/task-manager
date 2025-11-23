@@ -43,7 +43,10 @@ describe('AuthController (unit)', () => {
   });
 
   it('login validates credentials and returns token + user', async () => {
-    const resp = { user: { id: 'u2', email: 'b@e.com', name: 'Bob' }, access_token: 'token456' };
+    const resp = {
+      user: { id: 'u2', email: 'b@e.com', name: 'Bob' },
+      access_token: 'token456',
+    };
     (authService.loginWithCredentials as jest.Mock).mockResolvedValue(resp);
 
     const res = await controller.login({

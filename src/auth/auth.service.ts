@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
@@ -7,6 +7,7 @@ import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -14,19 +15,27 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      this.logger.warn(`Invalid login attempt: unknown email ${email}`);
+      throw new UnauthorizedException('Invalid credentials');
+    }
     const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
+    if (!valid) {
+      this.logger.warn(`Invalid login attempt: wrong password for ${email}`);
+      throw new UnauthorizedException('Invalid credentials');
+    }
     return user;
   }
 
   async login(userId: string, email: string, name: string) {
     const payload = { sub: userId, email, name };
+    this.logger.log(`Issuing JWT for user ${userId}`);
     return { access_token: await this.jwtService.signAsync(payload) };
   }
 
   async register(dto: CreateUserDto) {
     const user = await this.usersService.create(dto);
+    this.logger.log(`Registered new user ${user.id} (${user.email})`);
     return { id: user.id, email: user.email, name: user.name };
   }
 

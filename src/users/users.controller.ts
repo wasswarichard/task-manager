@@ -1,7 +1,18 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('users')
@@ -14,13 +25,13 @@ export class UsersController {
   @ApiOperation({ summary: 'List users' })
   @ApiOkResponse({ description: 'Returns all users (public fields only)' })
   async findAll() {
-    return this.usersService.findAllPublic();
+    return this.usersService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by id' })
   @ApiOkResponse({ description: 'Returns a single user (public fields only)' })
-  async findOne(@Param('id') id: string) {
-    return this.usersService.findPublicById(id);
+  async findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    return this.usersService.findById(id);
   }
 }
