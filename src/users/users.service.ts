@@ -14,6 +14,12 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
   constructor(@InjectModel(User) private readonly userModel: typeof User) {}
 
+  /**
+   * Creates a new user.
+   * - Ensures the email is unique.
+   * - Hashes the incoming password using bcrypt.
+   * @throws ConflictException if email already exists
+   */
   async create(dto: CreateUserDto): Promise<User> {
     const existingUser = await this.userModel.findOne({
       where: { email: dto.email },
@@ -32,12 +38,19 @@ export class UsersService {
     return createdUser;
   }
 
+  /**
+   * Returns all users with sensitive attributes excluded.
+   */
   async findAll(): Promise<User[]> {
     return this.userModel.findAll({
       attributes: { exclude: ['passwordHash'] },
     });
   }
 
+  /**
+   * Finds a user by primary key.
+   * @throws NotFoundException when the user does not exist
+   */
   async findById(id: string): Promise<User> {
     const user = await this.userModel.findByPk(id);
     if (!user) {
@@ -47,6 +60,9 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * Finds a user by email (may return null).
+   */
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ where: { email } });
   }

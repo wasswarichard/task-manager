@@ -3,6 +3,14 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
+/**
+ * Application bootstrap.
+ *
+ * - Registers a global ValidationPipe to enforce DTO validation across the app
+ *   (whitelisting properties, forbidding unknown fields, and enabling type
+ *   transformation via class-transformer).
+ * - Sets up Swagger/OpenAPI documentation with JWT Bearer support.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
@@ -24,6 +32,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
-  await app.listen(9001);
+  await app.listen(3000);
 }
 bootstrap();

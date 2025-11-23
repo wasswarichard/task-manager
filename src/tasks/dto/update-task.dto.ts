@@ -7,6 +7,9 @@ import {
 } from 'class-validator';
 import { TaskStatus } from '../task.model';
 
+/**
+ * DTO to partially update a task.
+ */
 export class UpdateTaskDto {
   @IsOptional()
   @IsString()

@@ -25,6 +25,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+/**
+ * Tasks HTTP controller
+ *
+ * Exposes CRUD endpoints for tasks and assignment/unassignment endpoints.
+ * All routes are protected by the JWT auth guard. Inputs are validated by
+ * DTOs and `ParseUUIDPipe` for route params where applicable.
+ */
 @UseGuards(JwtAuthGuard)
 @ApiTags('tasks')
 @ApiBearerAuth()

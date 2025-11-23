@@ -17,6 +17,14 @@ type ListFilters = {
   assigneeId?: string;
 };
 
+/**
+ * Tasks domain service
+ *
+ * Encapsulates all business logic around tasks: creation, querying with
+ * filters, fetching with relations, updates (using partial payloads),
+ * soft-deletes, and assignee management. Controllers delegate to this layer
+ * to keep HTTP concerns separated from domain logic.
+ */
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
@@ -27,6 +35,12 @@ export class TasksService {
     @InjectModel(User) private readonly userModel: typeof User,
   ) {}
 
+  /**
+   * Creates a new task for the given creator.
+   * - Parses `dueDate` if provided, storing `null` when absent.
+   * @param dto Task creation payload
+   * @param createdById ID of the user creating the task
+   */
   async create(dto: CreateTaskDto, createdById: string): Promise<Task> {
     const dueDate = dto.dueDate ? new Date(dto.dueDate) : null;
     const created = await this.taskModel.create({
@@ -40,6 +54,12 @@ export class TasksService {
     return created;
   }
 
+  /**
+   * Lists tasks with optional filters.
+   * - `status` and `createdById` filter via `where` on the task row.
+   * - `assigneeId` filters via include on the junction relation.
+   * - Always includes `assignees` and `createdBy` with safe attributes.
+   */
   async findAll(filters: ListFilters = {}): Promise<Task[]> {
     const where: any = {};
     if (filters.status) where.status = filters.status;
@@ -69,6 +89,10 @@ export class TasksService {
     });
   }
 
+  /**
+   * Retrieves a single task by id including relations.
+   * @throws NotFoundException when the task does not exist
+   */
   async findOne(id: string): Promise<Task> {
     const task = await this.taskModel.findByPk(id, {
       include: [
@@ -88,6 +112,13 @@ export class TasksService {
     return task;
   }
 
+  /**
+   * Partially updates a task using only fields provided on the DTO.
+   *
+   * Implementation detail: builds an `updates` object from defined DTO
+   * properties using a filter, and converts `dueDate` to `Date` when present.
+   * Returns a simple success message and the (reloaded) task entity.
+   */
   async update(
     id: string,
     dto: UpdateTaskDto,
@@ -111,12 +142,21 @@ export class TasksService {
     };
   }
 
+  /**
+   * Soft-deletes a task (paranoid mode).
+   */
   async remove(id: string): Promise<void> {
     const task = await this.findOne(id);
     await task.destroy();
     this.logger.log(`Deleted task ${id}`);
   }
 
+  /**
+   * Assigns a user to a task (idempotent).
+   * - Returns a message and the junction row; if already assigned, the
+   *   existing row is returned with a friendly message.
+   * @throws NotFoundException when task or user is missing
+   */
   async assign(
     taskId: string,
     userId: string,
@@ -155,6 +195,10 @@ export class TasksService {
     };
   }
 
+  /**
+   * Unassigns a user from a task.
+   * @throws BadRequestException when the user is not currently assigned
+   */
   async unassign(
     taskId: string,
     userId: string,

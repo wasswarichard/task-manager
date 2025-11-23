@@ -14,6 +14,13 @@ import {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  /**
+   * POST /auth/register
+   *
+   * Creates a new user account. Per product requirement, the endpoint does
+   * not perform login — it returns only the public user profile with 201.
+   * Clients should call `/auth/login` afterwards to obtain a JWT.
+   */
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiCreatedResponse({ description: 'User registered successfully' })
@@ -21,6 +28,12 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  /**
+   * POST /auth/login
+   *
+   * Validates email/password and returns an access token plus a minimal
+   * user profile. Returns 201 on success.
+   */
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiOkResponse({ description: 'Returns JWT access token and user profile' })

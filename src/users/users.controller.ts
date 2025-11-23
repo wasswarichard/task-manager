@@ -14,6 +14,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+/**
+ * Users HTTP controller
+ *
+ * Exposes read-only endpoints for listing users and fetching a user by id.
+ * Endpoints are protected by JWT via `JwtAuthGuard`.
+ */
 @UseGuards(JwtAuthGuard)
 @ApiTags('users')
 @ApiBearerAuth()

@@ -11,6 +11,13 @@ import {
 } from 'sequelize-typescript';
 import { Task } from '../tasks/task.model';
 
+/**
+ * User model (Sequelize)
+ *
+ * Represents an application user. Paranoid mode enables soft deletes via the
+ * `deletedAt` column. Passwords are stored as a `passwordHash` and never
+ * returned by list endpoints.
+ */
 @Table({ tableName: 'users', timestamps: true, paranoid: true })
 export class User extends Model {
   @PrimaryKey

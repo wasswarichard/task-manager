@@ -7,6 +7,11 @@ import {
 } from 'class-validator';
 import { TaskStatus } from '../task.model';
 
+/**
+ * DTO to create a new task.
+ *
+ * All properties are validated by the global ValidationPipe.
+ */
 export class CreateTaskDto {
   @IsString()
   @MinLength(1)

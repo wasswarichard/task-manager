@@ -133,7 +133,6 @@ Notes:
 
 The application uses NestJS `Logger` for structured logging and a global request logging interceptor.
 
-- Global request logging: every HTTP request is logged with method, URL, status code, response time, and `uid` (JWT subject if available). Implemented by `RequestLoggingInterceptor` and registered globally in `main.ts`.
 - Service-layer logs: critical events and error-worthy conditions are logged in services:
   - `AuthService` logs registration, token issuance, and warns on invalid login attempts.
   - `UsersService` logs user creation and warns when a registration attempts to reuse an existing email or when a user is not found.

@@ -19,6 +19,12 @@ export enum TaskStatus {
   DONE = 'DONE',
 }
 
+/**
+ * Task model (Sequelize)
+ *
+ * Represents a work item created by a user, optionally assigned to many users
+ * via the `TaskAssignee` junction table. Paranoid mode enables soft deletes.
+ */
 @Table({ tableName: 'tasks', timestamps: true, paranoid: true })
 export class Task extends Model {
   @PrimaryKey
