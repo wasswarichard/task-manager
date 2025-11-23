@@ -126,7 +126,7 @@ export class TasksService {
     const task = await this.findOne(id);
 
     const updates = Object.fromEntries(
-      Object.entries(dto).filter(([_, v]) => v !== undefined),
+      Object.entries(dto).filter(([, v]) => v !== undefined),
     );
 
     if (updates.dueDate) {

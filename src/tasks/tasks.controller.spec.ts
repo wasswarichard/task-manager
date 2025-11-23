@@ -119,12 +119,9 @@ describe('TasksController (unit)', () => {
         title: 'Updated',
       }),
     );
-    const { task: task } = await controller.update(
-      'fb91dd43-9f94-4301-b44f-94cd190edba3',
-      {
-        title: 'Updated',
-      } as any,
-    );
+    await controller.update('fb91dd43-9f94-4301-b44f-94cd190edba3', {
+      title: 'Updated',
+    } as any);
     expect(service.update).toHaveBeenCalledWith(
       'fb91dd43-9f94-4301-b44f-94cd190edba3',
       {
