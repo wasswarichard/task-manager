@@ -88,13 +88,31 @@ export class TasksService {
     return task;
   }
 
-  async update(id: string, dto: UpdateTaskDto): Promise<Task> {
-    const [_, [updated]] = await Task.update(dto, {
+  async update(
+    id: string,
+    dto: UpdateTaskDto,
+  ): Promise<{ message: string; task: Task }> {
+
+    await this.findOne(id);
+
+    const updates = Object.fromEntries(
+      Object.entries(dto).filter(([_, v]) => v !== undefined),
+    );
+
+    if (updates.dueDate) {
+      updates.dueDate = new Date(updates.dueDate as string);
+    }
+
+    const [_, [updated]] = await this.taskModel.update(updates, {
       where: { id },
       returning: true,
     });
+    this.logger.log(`Updated task ${id}`);
 
-    return updated;
+    return {
+      message: 'Task updated successfully',
+      task: updated,
+    };
   }
 
   async remove(id: string): Promise<void> {
