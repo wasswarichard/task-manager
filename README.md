@@ -84,6 +84,51 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Docker & Docker Compose
+
+You can run the API and a PostgreSQL database fully containerized.
+
+Prerequisites: Docker Desktop or compatible Docker + Docker Compose v2.
+
+1) Create your environment file
+
+```
+cp .env.example .env
+# When using docker-compose the DB host is the service name 'db';
+# docker-compose.yml already overrides DB_HOST to 'db'.
+```
+
+2) Start with Docker Compose
+
+```
+docker compose up --build
+```
+
+This will:
+- Start Postgres 15 (service `db`) with a persisted volume `db_data`
+- Build the app image and start the API (service `api`) on port 3000
+
+3) Access the API
+
+- Swagger UI: http://localhost:3000/docs
+- Health check: open the docs URL above or hit any endpoint
+
+4) Stop containers
+
+```
+docker compose down
+```
+
+To remove the database volume as well:
+
+```
+docker compose down -v
+```
+
+Notes:
+- The app reads database and JWT settings from environment variables. See `.env.example` for defaults. In Compose, `DB_HOST` is set to `db` automatically.
+- Sequelize auto-sync is enabled, so tables will be created on first run.
+
 ## Logging
 
 The application uses NestJS `Logger` for structured logging and a global request logging interceptor.
@@ -144,13 +189,19 @@ Notes about tests:
 - Unit tests and e2e tests run against an in-memory SQLite database (via `@nestjs/sequelize`) so you do not need Postgres running to execute tests.
 - The production app still uses PostgreSQL as configured in `AppModule`; the test harness wires a separate `SequelizeModule` instance targeting SQLite only for tests (`test/utils/test-app.module.ts`).
 
+## Screenshots
+
+- Test coverage report (example):
+
+![Test coverage screenshot](docs/test_coverage.png)
+
 ## Assumptions
 - Single organization scope (no multi-tenant separation).
 - Minimal user CRUD is sufficient for demonstrating assignment.
 - Idempotent assignment; re-assigning the same user to a task is a no-op.
 
-## Future Improvements (if more time)
-- Replace auto-sync with migrations (umzug or sequelize-cli).
+## Future Improvements
+- Replace auto-sync with migrations (sequelize-cli).
 - Add pagination and sorting to list endpoints.
 - Add ownership/authorization checks (e.g., only creator can edit/delete their tasks).
 - Add refresh tokens and password reset flow.
