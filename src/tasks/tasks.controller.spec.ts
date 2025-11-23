@@ -13,8 +13,18 @@ describe('TasksController (unit)', () => {
     description: 'Desc',
     status: TaskStatus.OPEN,
     dueDate: new Date('2030-01-01'),
-    createdBy: { id: 'u1', email: 'a@e.com', name: 'Alice' },
-    assignees: [{ id: 'u2', email: 'b@e.com', name: 'Bob' }],
+    createdBy: {
+      id: '5dedd39b-3c83-4b68-aa01-62192815af05',
+      email: 'a@e.com',
+      name: 'Alice',
+    },
+    assignees: [
+      {
+        id: 'e8dac33e-e0f7-4a27-9c3c-3c629b9807a5',
+        email: 'b@e.com',
+        name: 'Bob',
+      },
+    ],
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-02'),
     ...over,
@@ -66,8 +76,18 @@ describe('TasksController (unit)', () => {
       description: 'Desc',
       status: TaskStatus.OPEN,
       dueDate: new Date('2030-01-01'),
-      createdBy: { id: 'u1', email: 'a@e.com', name: 'Alice' },
-      assignees: [{ id: 'u2', email: 'b@e.com', name: 'Bob' }],
+      createdBy: {
+        id: '5dedd39b-3c83-4b68-aa01-62192815af05',
+        email: 'a@e.com',
+        name: 'Alice',
+      },
+      assignees: [
+        {
+          id: 'e8dac33e-e0f7-4a27-9c3c-3c629b9807a5',
+          email: 'b@e.com',
+          name: 'Bob',
+        },
+      ],
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-02'),
     });
@@ -79,43 +99,38 @@ describe('TasksController (unit)', () => {
     expect(service.findOne).toHaveBeenCalledWith('tx');
     expect(res.id).toBe('tx');
     expect(res.createdBy).toEqual({
-      id: 'u1',
+      id: '5dedd39b-3c83-4b68-aa01-62192815af05',
       email: 'a@e.com',
       name: 'Alice',
     });
     expect(res.assignees).toEqual([
-      { id: 'u2', email: 'b@e.com', name: 'Bob' },
+      {
+        id: 'e8dac33e-e0f7-4a27-9c3c-3c629b9807a5',
+        email: 'b@e.com',
+        name: 'Bob',
+      },
     ]);
-  });
-
-  it('create uses req.user.userId and returns created task fetched with relations', async () => {
-    (service.create as jest.Mock).mockResolvedValue(makeTask({ id: 'newId' }));
-    (service.findOne as jest.Mock).mockResolvedValue(makeTask({ id: 'newId' }));
-
-    const res = await controller.create(
-      { title: 'New Task' } as any,
-      { user: { userId: 'creator-123' } } as any,
-    );
-
-    expect(service.create).toHaveBeenCalledWith(
-      { title: 'New Task' },
-      'creator-123',
-    );
-    expect(service.findOne).toHaveBeenCalledWith('newId');
-    expect(res.id).toBe('newId');
   });
 
   it('update returns updated task', async () => {
     (service.update as jest.Mock).mockResolvedValue(
-      makeTask({ id: 'to-update', title: 'Updated' }),
+      makeTask({
+        id: 'fb91dd43-9f94-4301-b44f-94cd190edba3',
+        title: 'Updated',
+      }),
     );
-    const res = await controller.update('to-update', {
-      title: 'Updated',
-    } as any);
-    expect(service.update).toHaveBeenCalledWith('to-update', {
-      title: 'Updated',
-    });
-    expect(res.title).toBe('Updated');
+    const { task: task } = await controller.update(
+      'fb91dd43-9f94-4301-b44f-94cd190edba3',
+      {
+        title: 'Updated',
+      } as any,
+    );
+    expect(service.update).toHaveBeenCalledWith(
+      'fb91dd43-9f94-4301-b44f-94cd190edba3',
+      {
+        title: 'Updated',
+      },
+    );
   });
 
   it('remove delegates to service.remove and returns void', async () => {

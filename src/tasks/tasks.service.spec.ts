@@ -64,7 +64,7 @@ describe('TasksService (unit, sqlite)', () => {
       { title: 'Task B', description: 'desc', dueDate: '2030-01-02' },
       creator.id,
     );
-    const updated = await tasks.update(created.id, {
+    const { task: updated } = await tasks.update(created.id, {
       title: 'Task B2',
       description: null as any,
       dueDate: null as any,

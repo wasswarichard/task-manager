@@ -40,9 +40,9 @@ export class TasksController {
   @ApiQuery({ name: 'assigneeId', required: false })
   async findAll(
     @Query('status') status?: TaskStatus,
-    @Query('createdById', new ParseUUIDPipe({ version: '4' }))
+    @Query('createdById')
     createdById?: string,
-    @Query('assigneeId', new ParseUUIDPipe({ version: '4' }))
+    @Query('assigneeId')
     assigneeId?: string,
   ) {
     return this.tasksService.findAll({

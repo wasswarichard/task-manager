@@ -92,8 +92,7 @@ export class TasksService {
     id: string,
     dto: UpdateTaskDto,
   ): Promise<{ message: string; task: Task }> {
-
-    await this.findOne(id);
+    const task = await this.findOne(id);
 
     const updates = Object.fromEntries(
       Object.entries(dto).filter(([_, v]) => v !== undefined),
@@ -103,15 +102,12 @@ export class TasksService {
       updates.dueDate = new Date(updates.dueDate as string);
     }
 
-    const [_, [updated]] = await this.taskModel.update(updates, {
-      where: { id },
-      returning: true,
-    });
+    await task.update(updates);
     this.logger.log(`Updated task ${id}`);
 
     return {
       message: 'Task updated successfully',
-      task: updated,
+      task,
     };
   }
 
