@@ -1,8 +1,8 @@
 import {
-  Injectable,
-  NotFoundException,
   BadRequestException,
+  Injectable,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Task, TaskStatus } from './task.model';
@@ -45,29 +45,28 @@ export class TasksService {
     if (filters.status) where.status = filters.status;
     if (filters.createdById) where.createdById = filters.createdById;
 
+    const assigneeInclude: any = {
+      model: User,
+      as: 'assignees',
+      through: { attributes: [] },
+      attributes: ['id', 'email', 'name'],
+    };
+
+    // Filter by assigneeId directly in the query if provided
+    if (filters.assigneeId) {
+      assigneeInclude.where = { id: filters.assigneeId };
+    }
+
     const include: any[] = [
-      {
-        model: User,
-        as: 'assignees',
-        through: { attributes: [] },
-        attributes: ['id', 'email', 'name'],
-      },
+      assigneeInclude,
       { model: User, as: 'createdBy', attributes: ['id', 'email', 'name'] },
     ];
 
-    let tasks = await this.taskModel.findAll({
+    return await this.taskModel.findAll({
       where,
       include,
       order: [['createdAt', 'DESC']],
     });
-
-    if (filters.assigneeId) {
-      tasks = tasks.filter((t) =>
-        (t.assignees || []).some((a) => a.id === filters.assigneeId),
-      );
-    }
-
-    return tasks;
   }
 
   async findOne(id: string): Promise<Task> {
@@ -104,11 +103,15 @@ export class TasksService {
     this.logger.log(`Deleted task ${id}`);
   }
 
-  async assign(taskId: string, userId: string): Promise<TaskAssignee> {
+  async assign(
+    taskId: string,
+    userId: string,
+  ): Promise<{ message: string; assignment: TaskAssignee }> {
     const [task, user] = await Promise.all([
       this.taskModel.findByPk(taskId),
       this.userModel.findByPk(userId),
     ]);
+
     if (!task) {
       this.logger.warn(`Assign failed: task not found ${taskId}`);
       throw new NotFoundException('Task not found');
@@ -121,28 +124,44 @@ export class TasksService {
     const existing = await this.taskAssignee.findOne({
       where: { taskId, userId },
     });
+
     if (existing) {
-      this.logger.debug(
-        `Assign noop: user ${userId} already assigned to task ${taskId}`,
-      );
-      return existing;
+      this.logger.debug(`user ${userId} already assigned to task ${taskId}`);
+      return {
+        message: 'User is already assigned to this task',
+        assignment: existing,
+      };
     }
+
     const created = await this.taskAssignee.create({ taskId, userId } as any);
     this.logger.log(`Assigned user ${userId} to task ${taskId}`);
-    return created;
+    return {
+      message: 'User assigned successfully',
+      assignment: created,
+    };
   }
 
-  async unassign(taskId: string, userId: string): Promise<void> {
+  async unassign(
+    taskId: string,
+    userId: string,
+  ): Promise<{ message: string; taskId: string; userId: string }> {
     const existing = await this.taskAssignee.findOne({
       where: { taskId, userId },
     });
+
     if (!existing) {
       this.logger.warn(
         `Unassign failed: user ${userId} not assigned to task ${taskId}`,
       );
       throw new BadRequestException('User is not assigned to this task');
     }
+
     await existing.destroy();
-    this.logger.log(`Unassigned user ${userId} from task ${taskId}`);
+
+    return {
+      message: 'User unassigned successfully',
+      taskId,
+      userId,
+    };
   }
 }
